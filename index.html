@@ -3,20 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Binance Pump + Markets Tracker</title>
-  <meta name="description" content="Live pump & markets tracker — mobile-first. Manual trades only." />
+  <title>Binance Pro Scalper - High Quality Signals</title>
+  <meta name="description" content="Mobile-first scalping tracker — high-liquidity futures, structural & indicator-based signals." />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body { background:#0f1724; color:#e6eef8; -webkit-font-smoothing:antialiased; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; }
+    body { background:#0f1724; color:#e6eef8; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial; -webkit-font-smoothing:antialiased; }
     .card { background:#0b1220; border:1px solid rgba(255,183,77,0.06); border-radius:12px; }
     .muted { color:#93a3b8; }
     .accent { color:#fbbf24; }
     .small { font-size:12px; }
     .btn { background:#f59e0b; color:#081122; padding:8px 12px; border-radius:8px; font-weight:600; }
-    /* mobile friendly tweaks */
-    @media (min-width: 768px) {
-      .container { max-width:820px; margin:24px auto; }
-    }
+    @media (min-width:768px){ .container{max-width:820px;margin:24px auto;} }
+    /* modal background click target */
+    .modal-bg { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
   </style>
 </head>
 <body>
@@ -24,58 +23,54 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="flex items-center space-x-3">
-          <div style="width:46px; height:46px; background:linear-gradient(135deg,#063b7a,#0ea5a4); border-radius:10px; display:flex;align-items:center;justify-content:center;">
+          <div style="width:46px;height:46px;background:linear-gradient(135deg,#063b7a,#0ea5a4);border-radius:10px;display:flex;align-items:center;justify-content:center;">
             <span style="font-weight:700;color:white">🚀</span>
           </div>
           <div>
-            <div class="text-2xl font-bold">Live Pump & Markets Tracker</div>
-            <div class="muted small">Scalping (1m & 5m) • High-liquidity only (≥ $100M 24h volume)</div>
+            <div class="text-2xl font-bold">Pro Scalper — High Quality Signals</div>
+            <div class="muted small">Scalping (1m & 5m) • High-liquidity futures only</div>
           </div>
         </div>
       </div>
       <div class="text-right">
-        <button id="refreshBtn" class="btn">Refresh</button>
+        <div class="flex items-center space-x-2">
+          <button id="refreshBtn" class="btn">Refresh</button>
+        </div>
         <div id="lastUpdate" class="muted small mt-2 text-right">—</div>
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="mb-4">
       <nav class="flex space-x-3">
-        <button class="tabBtn px-3 py-2 rounded bg-yellow-600 text-black font-semibold" data-tab="live">Live Pumps</button>
-        <button class="tabBtn px-3 py-2 rounded bg-gray-800 text-white" data-tab="markets">Markets</button>
+        <button class="tabBtn px-3 py-2 rounded bg-yellow-600 text-black font-semibold" data-tab="markets">Markets</button>
+        <button class="tabBtn px-3 py-2 rounded bg-gray-800 text-white" data-tab="live">Live Pumps</button>
         <button class="tabBtn px-3 py-2 rounded bg-gray-800 text-white" data-tab="history">Past Signals</button>
         <div class="ml-auto muted small">Mode: <span id="modeLabel">Browser-scan</span></div>
       </nav>
     </div>
 
-    <!-- Content -->
     <div id="contentArea" class="space-y-4">
-      <!-- Live pumps area -->
-      <div id="tab-live" class="tabContent">
-        <div id="liveList" class="space-y-3"></div>
-      </div>
-
-      <!-- Markets area -->
-      <div id="tab-markets" class="tabContent hidden">
+      <div id="tab-markets" class="tabContent">
         <div class="flex items-center justify-between mb-3">
-          <div class="muted small">Showing coins with 24h quoteVolume ≥ <strong id="volThresholdLabel">$100,000,000</strong></div>
+          <div class="muted small">Showing futures with 24h quoteVolume ≥ <strong id="volThresholdLabel">$100,000,000</strong></div>
           <div class="flex items-center space-x-2">
+            <label class="muted small">Min Prob:</label>
+            <input id="minProbInput" type="number" min="56" max="95" step="1" value="60" class="px-2 py-1 rounded bg-gray-800 small w-20 text-center" />
             <select id="directionFilter" class="px-2 py-1 rounded bg-gray-800 small">
-              <option value="all">All</option>
-              <option value="long">Longs</option>
-              <option value="short">Shorts</option>
+              <option value="all">All</option><option value="long">Longs</option><option value="short">Shorts</option>
             </select>
             <select id="sortBy" class="px-2 py-1 rounded bg-gray-800 small">
-              <option value="prob">Probability</option>
-              <option value="vol">Volume</option>
+              <option value="prob">Probability</option><option value="vol">Volume</option>
             </select>
           </div>
         </div>
         <div id="marketsList" class="space-y-3"></div>
       </div>
 
-      <!-- Past signals -->
+      <div id="tab-live" class="tabContent hidden">
+        <div id="liveList" class="space-y-3"></div>
+      </div>
+
       <div id="tab-history" class="tabContent hidden">
         <div id="historyRoot"></div>
       </div>
@@ -83,14 +78,12 @@
       <div id="errorBox" class="hidden text-red-400 small"></div>
     </div>
 
-    <div class="mt-6 muted small text-center">
-      ⚠️ Educational use only. Not financial advice. Data: Binance Futures API. Auto-refresh: 60s (browser).  
-    </div>
+    <div class="mt-6 muted small text-center">⚠️ Educational use only. Not financial advice. This is browser-side scanning — use caution and test before risking real funds.</div>
   </div>
 
-  <!-- Trade Modal (hidden) -->
-  <div id="tradeModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-40 items-center justify-center p-4">
-    <div class="card p-4 max-w-lg w-full">
+  <!-- Modal (click outside to close) -->
+  <div id="tradeModal" class="hidden modal-bg z-40">
+    <div id="modalContent" class="card p-4 max-w-lg w-full m-4">
       <div class="flex items-center justify-between mb-3">
         <div>
           <div id="modalSymbol" class="text-lg font-bold accent"></div>
@@ -98,51 +91,48 @@
         </div>
         <button id="closeModal" class="px-2 py-1 bg-gray-700 rounded text-sm">Close</button>
       </div>
-      <div id="modalBody" class="space-y-2">
-        <!-- filled by JS -->
-      </div>
+      <div id="modalBody" class="space-y-2"></div>
       <div class="mt-3 flex justify-between">
         <div class="muted small">Manual trades only — copy params to your exchange</div>
-        <div>
-          <button id="saveToHistory" class="px-3 py-1 bg-green-600 rounded text-sm">Save</button>
-        </div>
+        <div><button id="saveToHistory" class="px-3 py-1 bg-green-600 rounded text-sm">Save</button></div>
       </div>
     </div>
   </div>
 
 <script>
-/* ===== CONFIG ===== */
-const REFRESH_MS = 60 * 1000;           // 1 minute refresh
-const MIN_VOLUME = 100_000_000;         // 24h quoteVolume >= 100 million
-const TIMEFRAMES = ['1m','5m'];         // scalping focus
-const SCAN_LIMIT = 120;                 // how many top symbols to consider (sorted by 24h pump)
-const HISTORY_KEY = 'market_history_v2';
-const HISTORY_RETENTION_MS = 48 * 60 * 60 * 1000; // 48 hours
-const BALANCE_THRESHOLD = 0.5; // unused for now
-/* ================== */
+/* ---------- CONFIG ---------- */
+const REFRESH_MS = 60 * 1000;            // 1 min
+const MIN_VOLUME = 100_000_000;          // quoteVolume threshold
+const TIMEFRAMES = ['1m','5m'];          // scalping
+const SCAN_LIMIT = 120;
+const HISTORY_KEY = 'pro_scalper_history_v1';
+const HISTORY_RETENTION_MS = 48 * 60 * 60 * 1000;
+/* ---------------------------- */
 
 const refreshBtn = document.getElementById('refreshBtn');
 const lastUpdate = document.getElementById('lastUpdate');
-const liveList = document.getElementById('liveList');
 const marketsList = document.getElementById('marketsList');
+const liveList = document.getElementById('liveList');
 const errorBox = document.getElementById('errorBox');
 const historyRoot = document.getElementById('historyRoot');
 const tradeModal = document.getElementById('tradeModal');
+const modalContent = document.getElementById('modalContent');
 const modalSymbol = document.getElementById('modalSymbol');
 const modalSub = document.getElementById('modalSub');
 const modalBody = document.getElementById('modalBody');
 const closeModal = document.getElementById('closeModal');
 const saveToHistory = document.getElementById('saveToHistory');
+const minProbInput = document.getElementById('minProbInput');
 
 let currentModalSignal = null;
 
-// ---------------- Utilities ----------------
+/* ---------- utilities ---------- */
 function nowISO(){ return new Date().toISOString(); }
-function fmt(n){ const x=Number(n); if (isNaN(x)) return '-'; if (x>=1) return x.toFixed(2); if (x>=0.01) return x.toFixed(4); return x.toFixed(6); }
+function fmt(n){ const x=Number(n); if(isNaN(x)) return '-'; if(x>=1) return x.toFixed(2); if(x>=0.01) return x.toFixed(4); return x.toFixed(6); }
 function showError(m){ errorBox.textContent = m; errorBox.classList.remove('hidden'); }
 function hideError(){ errorBox.classList.add('hidden'); errorBox.textContent=''; }
 
-// ---------------- Local history store (48h retention) ----------------
+/* ---------- history (48h) ---------- */
 function loadHistory(){
   try {
     const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
@@ -150,258 +140,307 @@ function loadHistory(){
     const filtered = raw.filter(r => new Date(r.time).getTime() >= cutoff);
     if (filtered.length !== raw.length) localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered));
     return filtered;
-  } catch(e) { return []; }
+  } catch(e){ return []; }
 }
 function saveHistory(arr){ localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); }
 function addHistoryEntry(item){
   const h = loadHistory();
   h.unshift(item);
-  saveHistory(h.slice(0, 500));
+  saveHistory(h.slice(0,500));
   renderHistory();
 }
 
-// ---------------- Indicator helpers ----------------
-function sma(values, period){
-  if (values.length < period) return null;
-  const slice = values.slice(-period);
-  return slice.reduce((a,b)=>a+b,0)/period;
-}
+/* ---------- indicators & structure ---------- */
+function sma(values, period){ if(values.length<period) return null; const s=values.slice(-period); return s.reduce((a,b)=>a+b,0)/period; }
 function ema(values, period){
-  if (values.length < period) return null;
+  if(values.length<period) return null;
   const k = 2/(period+1);
-  let emaPrev = sma(values.slice(0,period), period);
-  for (let i=period;i<values.length;i++){
-    emaPrev = values[i]*k + emaPrev*(1-k);
-  }
-  return emaPrev;
+  let prev = sma(values.slice(0,period), period);
+  for(let i=period;i<values.length;i++) prev = values[i]*k + prev*(1-k);
+  return prev;
 }
 function rsiFromCloses(closes, period=14){
-  if (closes.length < period+1) return null;
+  if(closes.length < period+1) return null;
   let gains=0, losses=0;
-  for (let i=1;i<closes.length;i++){
-    const d = closes[i]-closes[i-1];
-    if (d>0) gains += d; else losses += -d;
-  }
-  const avgG = gains/period;
-  const avgL = losses/period;
-  if (avgL === 0) return 100;
+  for(let i=1;i<closes.length;i++){ const d = closes[i]-closes[i-1]; if(d>0) gains += d; else losses += -d; }
+  const avgG = gains/period; const avgL = losses/period;
+  if(avgL===0) return 100;
   const rs = avgG/avgL;
   return 100 - (100/(1+rs));
 }
 function computeATR(klines, period=14){
-  const highs = klines.map(k => Number(k[2]));
-  const lows = klines.map(k => Number(k[3]));
-  const closes = klines.map(k => Number(k[4]));
+  const highs = klines.map(k=>Number(k[2]));
+  const lows = klines.map(k=>Number(k[3]));
+  const closes = klines.map(k=>Number(k[4]));
   const tr = [];
-  for (let i=1;i<closes.length;i++){
+  for(let i=1;i<closes.length;i++){
     tr.push(Math.max(highs[i]-lows[i], Math.abs(highs[i]-closes[i-1]), Math.abs(lows[i]-closes[i-1])));
   }
-  if (tr.length < period) return null;
-  const slice = tr.slice(-period);
-  const atr = slice.reduce((a,b)=>a+b,0)/period;
-  const lastClose = closes[closes.length-1];
-  return { atr, atr_pct: atr/lastClose };
+  if(tr.length < period) return null;
+  const atr = tr.slice(-period).reduce((a,b)=>a+b,0)/period;
+  return { atr, atr_pct: atr / closes[closes.length-1] };
 }
 function emaSlope(closes, p1=21, p2=50){
-  const e1 = ema(closes, p1);
-  const e2 = ema(closes, p2);
-  if (!e1 || !e2) return 0;
-  return (e1 - e2) / e2; // positive -> bullish slope
+  const e1 = ema(closes,p1); const e2 = ema(closes,p2);
+  if(!e1 || !e2) return 0;
+  return (e1 - e2) / e2;
+}
+function computeMACD(closes, fast=12, slow=26, signal=9){
+  if(closes.length < slow + signal) return null;
+  const emaFast=[]; const emaSlow=[];
+  for(let i=0;i<closes.length;i++){ const slice = closes.slice(0,i+1); emaFast.push(ema(slice,fast)); emaSlow.push(ema(slice,slow)); }
+  const macdLine = macdLine = emaFast.map((v,i)=>(v==null||emaSlow[i]==null)?null:(v - emaSlow[i]));
+  const valid = macdLine.filter(x=>x!==null);
+  if(valid.length < signal) return null;
+  const sigLine = [];
+  for(let i=0;i<macdLine.length;i++){
+    const slice = macdLine.slice(0,i+1).filter(x=>x!==null);
+    sigLine.push(ema(slice, signal));
+  }
+  const last = macdLine[macdLine.length-1]; const s = sigLine[sigLine.length-1];
+  if(last==null || s==null) return null;
+  return { macd: last, signal: s, hist: last - s };
+}
+/* VWAP (session-ish) using klines (uses volume index 5) */
+function computeVWAP(klines){
+  let cumPV = 0, cumV = 0;
+  for(const k of klines){
+    const high = Number(k[2]), low = Number(k[3]), close = Number(k[4]), vol = Number(k[5]);
+    const typical = (high + low + close)/3;
+    cumPV += typical * vol;
+    cumV += vol;
+  }
+  return cumV === 0 ? null : (cumPV / cumV);
+}
+/* simple SuperTrend using ATR */
+function supertrend(klines, period=10, multiplier=3){
+  const highs = klines.map(k => Number(k[2])), lows = klines.map(k=>Number(k[3])), closes = klines.map(k=>Number(k[4]));
+  const atrObj = computeATR(klines, period);
+  if(!atrObj) return null;
+  const atr = atrObj.atr;
+  const basicUpper = [], basicLower = [];
+  for(let i=0;i<closes.length;i++){ const hl2=(highs[i]+lows[i])/2; basicUpper.push(hl2 + multiplier*atr); basicLower.push(hl2 - multiplier*atr); }
+  const finalUpper = [], finalLower = [];
+  for(let i=0;i<closes.length;i++){
+    if(i===0) { finalUpper.push(basicUpper[i]); finalLower.push(basicLower[i]); continue; }
+    const fu = (basicUpper[i] < finalUpper[i-1] || closes[i-1] > finalUpper[i-1]) ? basicUpper[i] : finalUpper[i-1];
+    const fl = (basicLower[i] > finalLower[i-1] || closes[i-1] < finalLower[i-1]) ? basicLower[i] : finalLower[i-1];
+    finalUpper.push(fu); finalLower.push(fl);
+  }
+  const trend = [];
+  for(let i=0;i<closes.length;i++){
+    if(i===0) { trend.push(true); continue; }
+    if(closes[i] > finalUpper[i]) trend.push(true); else if(closes[i] < finalLower[i]) trend.push(false); else trend.push(trend[i-1]);
+  }
+  return { trend: trend[trend.length-1], finalUpper: finalUpper[finalUpper.length-1], finalLower: finalLower[finalLower.length-1] };
 }
 
-// ---------------- Scoring ----------------
-/* Balanced scoring approach:
-   For each timeframe compute:
-    - trendScore: EMA slope (21 vs 50)
-    - momentumScore: RSI (overbought adds to ShortScore, oversold to LongScore)
-    - volScore: log(volume)
-    - pumpScore: recent 24h pump%
-    - volatility: ATR_pct to size SL/TP and penalize tiny moves
+/* Swing pivot detection (find recent S/R levels) */
+function findSwingLevels(klines, left=3, right=3){
+  // returns arrays of swing highs and lows (level = price)
+  const highs = klines.map(k=>Number(k[2])), lows = klines.map(k=>Number(k[3]));
+  const swingHighs = [], swingLows = [];
+  for(let i=left;i<klines.length-right;i++){
+    const curH = highs[i], curL = lows[i];
+    let isHigh = true, isLow = true;
+    for(let j=i-left; j<=i+right; j++){
+      if(j===i) continue;
+      if(highs[j] >= curH) isHigh = false;
+      if(lows[j] <= curL) isLow = false;
+    }
+    if(isHigh) swingHighs.push({idx:i, price:curH});
+    if(isLow) swingLows.push({idx:i, price:curL});
+  }
+  // return most recent few levels (dedup by price)
+  const uniq = (arr, n=5) => {
+    const out = []; const set = new Set();
+    for(let i=arr.length-1;i>=0;i--){
+      const p = Math.round(arr[i].price * 100000)/100000;
+      if(!set.has(p)){ set.add(p); out.push(arr[i]); if(out.length>=n) break; }
+    }
+    return out;
+  };
+  return { highs: uniq(swingHighs,6), lows: uniq(swingLows,6) };
+}
 
-   Combine scores from 1m and 5m (weight 0.6/0.4 favor 1m for scalping)
-*/
-function scoreSignal({pumpPercent, rsi, emaSlopeVal, quoteVol, atr_pct}) {
-  // Normalize and weight
-  const pumpScore = Math.min(30, Math.max(0, pumpPercent)); // up to 30
-  const volScore = Math.min(20, Math.log10(Math.max(1, quoteVol))); // up to 20
-  const emaScore = Math.max(-20, Math.min(20, emaSlopeVal * 200)); // scaled
-  // momentum: RSI
+/* Simple FVG/Order-block approx: detect last impulsive candle and mark its body as block */
+function detectOrderBlock(klines, atr){
+  // find last candle with body > 1.5 * atr
+  for(let i=klines.length-2;i>=3;i--){
+    const open = Number(klines[i][1]), close = Number(klines[i][4]), high = Number(klines[i][2]), low = Number(klines[i][3]);
+    const body = Math.abs(close-open);
+    if(body >= 1.5 * atr){
+      const isBull = close > open;
+      // order block zone: for bullish block zone = [low, close]; bearish block zone = [close, high]
+      if(isBull) return { type:'bull', top: close, bottom: low, idx: i };
+      else return { type:'bear', top: high, bottom: close, idx: i };
+    }
+  }
+  return null;
+}
+
+/* ---------- scoring ---------- */
+function scoreSignal({pumpPercent, rsi, emaSlopeVal, quoteVol, atr_pct, macdHist, stTrend, nearStructure=false, nearVWAP=false, orderBlockMatch=false}){
+  const pumpScore = Math.min(30, Math.max(0, pumpPercent));
+  const volScore = Math.min(20, Math.log10(Math.max(1, quoteVol)));
+  const emaScore = Math.max(-20, Math.min(20, emaSlopeVal * 200));
   let rsiShort = 0, rsiLong = 0;
-  if (rsi >= 65) rsiShort = (rsi - 65) * 1.2; // overweight overbought
-  if (rsi <= 35) rsiLong = (35 - rsi) * 1.2;   // overweight oversold
+  if(rsi >= 65) rsiShort = (rsi - 65) * 1.2;
+  if(rsi <= 35) rsiLong = (35 - rsi) * 1.2;
+  const macdScore = macdHist == null ? 0 : Math.max(-20, Math.min(20, macdHist * 50));
+  const stScore = stTrend == null ? 0 : (stTrend ? 10 : -10);
 
-  // base scores
-  const baseShort = Math.max(0, pumpScore * 0.4 + volScore * 0.3 + Math.max(0, -emaScore) * 0.2 + rsiShort * 0.5);
-  const baseLong  = Math.max(0, pumpScore * 0.2 + volScore * 0.3 + Math.max(0, emaScore) * 0.2 + rsiLong * 0.5);
+  const baseShort = Math.max(0, pumpScore*0.35 + volScore*0.2 + Math.max(0,-emaScore)*0.12 + rsiShort*0.4 + Math.max(0,-macdScore)*0.25 + (stScore<0?6:0));
+  const baseLong  = Math.max(0, pumpScore*0.25 + volScore*0.2 + Math.max(0,emaScore)*0.12 + rsiLong*0.4 + Math.max(0,macdScore)*0.25 + (stScore>0?6:0));
 
-  // volatility penalty: too low atr_pct means weak moves -> reduce confidence
-  const volPenalty = (atr_pct < 0.002 ? (0.002 - atr_pct) * 1000 : 0); // small reduction if <0.2% ATR
-  const adjShort = Math.max(0, baseShort - volPenalty);
-  const adjLong  = Math.max(0, baseLong - volPenalty);
+  // structural boosts
+  let structBoost = 0;
+  if(nearStructure) structBoost += 8;
+  if(nearVWAP) structBoost += 6;
+  if(orderBlockMatch) structBoost += 8;
 
-  // scale to 0-100
+  const adjShort = Math.max(0, baseShort + (structBoost * (0.6)) - (atr_pct < 0.002 ? (0.002 - atr_pct)*1000 : 0));
+  const adjLong  = Math.max(0, baseLong  + (structBoost * (0.6)) - (atr_pct < 0.002 ? (0.002 - atr_pct)*1000 : 0));
+
   const shortScore = Math.round(Math.min(100, adjShort * 1.6));
   const longScore  = Math.round(Math.min(100, adjLong * 1.6));
+
   return { shortScore, longScore };
 }
 
-// ---------------- Fetch & analyze ----------------
-async function fetchKlines(symbol, interval, limit=200){
+/* ---------- fetch helpers ---------- */
+async function fetchKlines(symbol, interval, limit=500){
   try {
-    const r = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
-    const j = await r.json();
-    if (!Array.isArray(j)) return null;
+    const res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+    const j = await res.json();
+    if(!Array.isArray(j)) return null;
     return j;
   } catch(e){ return null; }
 }
 
+/* ---------- main scan ---------- */
 async function scanMarkets(){
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = 'Scanning...';
-  hideError();
-
+  refreshBtn.disabled = true; refreshBtn.textContent = 'Scanning...'; hideError();
   try {
-    // 1) exchangeInfo + 24hr tickers
     const [exRes, tickRes] = await Promise.all([
       fetch('https://fapi.binance.com/fapi/v1/exchangeInfo'),
       fetch('https://fapi.binance.com/fapi/v1/ticker/24hr')
     ]);
     const exData = await exRes.json();
     const tickers = await tickRes.json();
-
-    const usdtSymbols = new Set(exData.symbols.filter(s => s.status === 'TRADING' && s.symbol.endsWith('USDT')).map(s => s.symbol));
+    const usdtSymbols = new Set(exData.symbols.filter(s => s.status==='TRADING' && s.symbol.endsWith('USDT')).map(s=>s.symbol));
     const usdtTickers = tickers.filter(t => usdtSymbols.has(t.symbol));
-
-    // filter by volume threshold and sort by 24h change desc
     const highVol = usdtTickers
       .map(t => ({...t, quoteVolume: Number(t.quoteVolume || 0), priceChangePercent: Number(t.priceChangePercent || 0)}))
       .filter(t => t.quoteVolume >= MIN_VOLUME)
       .sort((a,b) => Math.abs(Number(b.priceChangePercent)) - Math.abs(Number(a.priceChangePercent)));
 
-    if (!highVol.length) {
-      showError('No symbols match the volume threshold right now.');
-      marketsList.innerHTML = '';
-      lastUpdate.textContent = 'Updated: ' + new Date().toLocaleString();
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = 'Refresh';
-      return;
-    }
-
+    if(!highVol.length){ showError('No symbols match volume threshold'); marketsList.innerHTML=''; lastUpdate.textContent='Updated: '+new Date().toLocaleString(); return; }
     const toScan = highVol.slice(0, SCAN_LIMIT);
-
-    // For performance: process symbols sequentially but with small concurrency
     const results = [];
+    const MIN_PROB = Number(minProbInput.value || 60);
 
-    for (const t of toScan) {
+    for(const t of toScan){
       const symbol = t.symbol;
-      // fetch klines for both timeframes
-      const k1 = await fetchKlines(symbol, '1m', 200);
-      const k5 = await fetchKlines(symbol, '5m', 200);
-      if (!k1 || !k5) continue;
+      const k1 = await fetchKlines(symbol,'1m',300);
+      const k5 = await fetchKlines(symbol,'5m',300);
+      if(!k1 || !k5 || k1.length < 80 || k5.length < 60) continue; // skip non-futures or insufficient data
 
-      // compute indicators on each tf
-      const closes1 = k1.map(k => Number(k[4]));
-      const closes5 = k5.map(k => Number(k[4]));
-      const rsi1 = rsiFromCloses(closes1) || 50;
-      const rsi5 = rsiFromCloses(closes5) || 50;
-      const emaSlope1 = emaSlope(closes1, 21, 50);
-      const emaSlope5 = emaSlope(closes5, 21, 50);
-      const atr1 = computeATR(k1) || { atr_pct: 0.002 };
-      const atr5 = computeATR(k5) || { atr_pct: 0.002 };
+      const closes1 = k1.map(k=>Number(k[4])), closes5 = k5.map(k=>Number(k[4]));
+      const rsi1 = rsiFromCloses(closes1) || 50, rsi5 = rsiFromCloses(closes5) || 50;
+      const rsiComb = rsi1*0.65 + rsi5*0.35;
+      const emaComb = emaSlope(closes1,21,50)*0.7 + emaSlope(closes5,21,50)*0.3;
+      const atr1 = computeATR(k1) || { atr_pct:0.002 }, atr5 = computeATR(k5) || { atr_pct:0.002 };
+      const atrComb = atr1.atr_pct*0.6 + atr5.atr_pct*0.4;
+      const macdObj = computeMACD(closes1);
+      const macdHist = macdObj ? macdObj.hist : null;
+      const stObj = supertrend(k5,10,3);
+      const stTrend = stObj ? stObj.trend : null;
+      const vwap = computeVWAP(k1.slice(-240)); // use last ~4 hours of 1m candles as session-ish VWAP
+      const pivots = findSwingLevels(k5,3,3);
+      const orderBlock = detectOrderBlock(k5, (atr5.atr || 0.0001));
 
-      // combined metrics: weighted towards 1m (scalping)
-      const pumpPercent = Number(t.priceChangePercent || 0);
-      const quoteVol = Number(t.quoteVolume || 0);
-      // weighted average of rsi and ema slope and atr
-      const rsiComb = (rsi1 * 0.65 + rsi5 * 0.35);
-      const emaComb = (emaSlope1 * 0.7 + emaSlope5 * 0.3);
-      const atrComb = (atr1.atr_pct * 0.6 + atr5.atr_pct * 0.4);
+      // structural checks: is price near a pivot level or VWAP or order-block?
+      const lastPrice = closes1[closes1.length-1];
+      const nearStructure = (() => {
+        const ATRp = atrComb || 0.002;
+        const threshold = ATRp * lastPrice * 1.5;
+        // check nearest pivot highs/lows
+        const candidates = (pivots.highs||[]).concat(pivots.lows||[]);
+        for(const c of candidates){
+          if(Math.abs(lastPrice - c.price) <= threshold) return true;
+        }
+        return false;
+      })();
+      const nearVWAP = vwap ? (Math.abs(lastPrice - vwap) <= (atrComb * lastPrice * 1.5)) : false;
+      const orderBlockMatch = orderBlock ? (lastPrice >= orderBlock.bottom && lastPrice <= orderBlock.top) : false;
 
-      const { shortScore, longScore } = scoreSignal({ pumpPercent, rsi: rsiComb, emaSlopeVal: emaComb, quoteVol, atr_pct: atrComb });
+      const pumpPercent = Number(t.priceChangePercent || 0), quoteVol = Number(t.quoteVolume || 0);
+
+      const { shortScore, longScore } = scoreSignal({
+        pumpPercent, rsi: rsiComb, emaSlopeVal: emaComb, quoteVol, atr_pct: atrComb,
+        macdHist, stTrend, nearStructure, nearVWAP, orderBlockMatch
+      });
 
       const direction = shortScore > longScore ? 'SHORT' : (longScore > shortScore ? 'LONG' : 'NEUTRAL');
-      const probability = Math.max(shortScore, longScore);
-      // entry price = last price from 1m closes
-      const entry = closes1[closes1.length-1];
-      // SL/TP using ATR (ATR multiplied)
-      const sl = direction === 'SHORT'
-        ? entry * (1 + Math.max(0.006, Math.min(0.05, atrComb * 3)))
-        : entry * (1 - Math.max(0.006, Math.min(0.05, atrComb * 3)));
-      const tp1 = direction === 'SHORT'
-        ? entry * (1 - Math.max(0.006, atrComb))
-        : entry * (1 + Math.max(0.006, atrComb));
-      const tp2 = direction === 'SHORT'
-        ? entry * (1 - Math.max(0.012, atrComb * 2))
-        : entry * (1 + Math.max(0.012, atrComb * 2));
+      const probability = Math.max(shortScore,longScore);
+      if(probability < MIN_PROB) continue;
+
+      // entry / sl / tps by ATR
+      const entry = lastPrice;
+      const sl = direction==='SHORT' ? entry * (1 + Math.max(0.006, Math.min(0.06, atrComb*3))) : entry * (1 - Math.max(0.006, Math.min(0.06, atrComb*3)));
+      const tp1 = direction==='SHORT' ? entry * (1 - Math.max(0.006, atrComb)) : entry * (1 + Math.max(0.006, atrComb));
+      const tp2 = direction==='SHORT' ? entry * (1 - Math.max(0.012, atrComb*2)) : entry * (1 + Math.max(0.012, atrComb*2));
 
       results.push({
         symbol, entry, sl, tp1, tp2, probability, direction, shortScore, longScore,
-        rsi: rsiComb, atr_pct: atrComb, pumpPercent, volume: quoteVol, time: nowISO()
+        rsi: rsiComb, atr_pct: atrComb, pumpPercent, volume: quoteVol, time: nowISO(),
+        vwap, pivots, orderBlock, macdHist, stTrend, nearStructure, nearVWAP, orderBlockMatch
       });
     }
 
-    // Sort by selected sort
     const sortBy = document.getElementById('sortBy').value;
-    if (sortBy === 'prob') results.sort((a,b) => b.probability - a.probability || b.volume - a.volume);
-    else results.sort((a,b) => b.volume - a.volume || b.probability - a.probability);
+    if(sortBy==='prob') results.sort((a,b)=>b.probability - a.probability || b.volume - a.volume);
+    else results.sort((a,b)=>b.volume - a.volume || b.probability - a.probability);
 
     renderMarkets(results);
+    // Live tab: show only signals which also have pump >=5% (fresh movers)
+    renderLive(results.filter(r => r.pumpPercent >= 5));
     lastUpdate.textContent = 'Updated: ' + new Date().toLocaleString();
-  } catch (err) {
+  } catch(err){
     console.error(err);
-    showError('Failed to fetch market data. Try refresh.');
+    showError('Failed to fetch data. Try refresh or check network.');
   } finally {
-    refreshBtn.disabled = false;
-    refreshBtn.textContent = 'Refresh';
+    refreshBtn.disabled = false; refreshBtn.textContent = 'Refresh';
   }
 }
 
-// ---------------- Render functions ----------------
+/* ---------- render ---------- */
 function renderMarkets(list){
   marketsList.innerHTML = '';
-  const directionFilter = document.getElementById('directionFilter').value;
-  const filtered = list.filter(i => {
-    if (directionFilter === 'all') return true;
-    if (directionFilter === 'long') return i.direction === 'LONG';
-    if (directionFilter === 'short') return i.direction === 'SHORT';
-    return true;
-  });
+  if(!list.length){ marketsList.innerHTML = `<div class="card p-4 muted">No high-quality signals (adjust Min Prob)</div>`; return; }
+  const dirFilter = document.getElementById('directionFilter').value;
+  const filtered = list.filter(i => dirFilter === 'all' ? true : (dirFilter === 'long' ? i.direction === 'LONG' : i.direction === 'SHORT'));
+  if(!filtered.length){ marketsList.innerHTML = `<div class="card p-4 muted">No signals for filters</div>`; return; }
 
-  if (!filtered.length) {
-    marketsList.innerHTML = `<div class="card p-4 muted">No market signals found for the filters.</div>`;
-    return;
-  }
-
-  for (const s of filtered) {
-    const card = document.createElement('div');
-    card.className = 'card p-3';
+  for(const s of filtered){
+    const card = document.createElement('div'); card.className='card p-3';
     card.innerHTML = `
       <div class="flex items-center justify-between">
-        <div>
-          <div class="font-bold accent">${s.symbol}</div>
-          <div class="muted small">Vol: ${Math.round(s.volume).toLocaleString()} • Pump: ${s.pumpPercent.toFixed(1)}%</div>
-        </div>
+        <div><div class="font-bold accent">${s.symbol}</div><div class="muted small">Vol ${Math.round(s.volume).toLocaleString()} • Pump ${s.pumpPercent.toFixed(1)}%</div></div>
         <div class="text-right">
-          <div class="text-sm font-semibold ${s.direction==='SHORT'? 'text-red-400':'text-green-300'}">${s.direction}</div>
+          <div class="text-sm font-semibold ${s.direction==='SHORT'?'text-red-400':'text-green-300'}">${s.direction}</div>
           <div class="muted small">Prob: ${s.probability}%</div>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2 mt-3 small">
-        <div class="bg-gray-800 p-2 rounded">
-          <div class="muted small">Entry</div><div class="font-mono">${fmt(s.entry)}</div>
-        </div>
-        <div class="bg-red-900 p-2 rounded">
-          <div class="muted small">Stop Loss</div><div class="font-mono">${fmt(s.sl)}</div>
-        </div>
-        <div class="bg-green-900 p-2 rounded">
-          <div class="muted small">TP1</div><div class="font-mono">${fmt(s.tp1)}</div>
-        </div>
-        <div class="bg-green-800 p-2 rounded">
-          <div class="muted small">TP2</div><div class="font-mono">${fmt(s.tp2)}</div>
-        </div>
+        <div class="bg-gray-800 p-2 rounded"><div class="muted small">Entry</div><div class="font-mono">${fmt(s.entry)}</div></div>
+        <div class="bg-red-900 p-2 rounded"><div class="muted small">Stop Loss</div><div class="font-mono">${fmt(s.sl)}</div></div>
+        <div class="bg-green-900 p-2 rounded"><div class="muted small">TP1</div><div class="font-mono">${fmt(s.tp1)}</div></div>
+        <div class="bg-green-800 p-2 rounded"><div class="muted small">TP2</div><div class="font-mono">${fmt(s.tp2)}</div></div>
       </div>
-      <div class="mt-3 flex items-center justify-between">
-        <div class="muted small">RSI:${s.rsi.toFixed(1)} • ATR%:${(s.atr_pct*100).toFixed(2)}%</div>
+      <div class="mt-3 flex items-center justify-between small">
+        <div class="muted">RSI:${s.rsi.toFixed(1)} • ATR%:${(s.atr_pct*100).toFixed(2)}% • MACD:${s.macdHist? s.macdHist.toFixed(4):'-'}</div>
         <div class="flex items-center space-x-2">
           <button class="openTrade px-3 py-1 rounded bg-yellow-600 font-semibold" data-symbol='${s.symbol}'>Trade</button>
           <button class="saveSig px-3 py-1 rounded bg-gray-700 text-sm" data-json='${encodeURIComponent(JSON.stringify(s))}'>Save</button>
@@ -411,36 +450,27 @@ function renderMarkets(list){
     marketsList.appendChild(card);
   }
 
-  // attach handlers
-  marketsList.querySelectorAll('.openTrade').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const symbol = e.currentTarget.getAttribute('data-symbol');
-      const s = filtered.find(x=>x.symbol===symbol);
-      if (s) openTradeModal(s);
-    });
-  });
-  marketsList.querySelectorAll('.saveSig').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const obj = JSON.parse(decodeURIComponent(e.currentTarget.getAttribute('data-json')));
-      addHistoryEntry(Object.assign({ id: obj.symbol+'_'+Date.now() }, obj));
-      alert('Saved to Past Signals');
-    });
-  });
+  marketsList.querySelectorAll('.openTrade').forEach(b => b.addEventListener('click', e => {
+    const symbol = e.currentTarget.getAttribute('data-symbol');
+    const s = list.find(x=>x.symbol===symbol);
+    if(s) openTradeModal(s);
+  }));
+  marketsList.querySelectorAll('.saveSig').forEach(b => b.addEventListener('click', e => {
+    const obj = JSON.parse(decodeURIComponent(e.currentTarget.getAttribute('data-json')));
+    addHistoryEntry(Object.assign({ id: obj.symbol+'_'+Date.now() }, obj));
+    alert('Saved to Past Signals');
+  }));
 }
 
 function renderLive(list){
   liveList.innerHTML = '';
-  if (!list.length) {
-    liveList.innerHTML = `<div class="card p-3 muted">No strong pumps right now.</div>`;
-    return;
-  }
-  for (const s of list) {
-    const card = document.createElement('div');
-    card.className = 'card p-3';
+  if(!list.length){ liveList.innerHTML = `<div class="card p-3 muted">No strong analysed pumps right now.</div>`; return; }
+  for(const s of list.slice(0,10)){
+    const card = document.createElement('div'); card.className='card p-3';
     card.innerHTML = `
       <div class="flex items-center justify-between">
         <div><div class="font-bold accent">${s.symbol}</div><div class="muted small">Pump ${s.pumpPercent}% • Vol ${Math.round(s.volume).toLocaleString()}</div></div>
-        <div class="text-right small muted">Conf: ${s.confidence}% • RSI:${s.rsi.toFixed(1)}</div>
+        <div class="text-right small muted">Prob ${s.probability}%</div>
       </div>
       <div class="mt-3 grid grid-cols-2 gap-2 small">
         <div class="bg-gray-800 p-2 rounded">Entry<br/><div class="font-mono">${fmt(s.entry)}</div></div>
@@ -448,26 +478,31 @@ function renderLive(list){
         <div class="bg-green-900 p-2 rounded">TP1<br/><div class="font-mono">${fmt(s.tp1)}</div></div>
         <div class="bg-green-800 p-2 rounded">TP2<br/><div class="font-mono">${fmt(s.tp2)}</div></div>
       </div>
-      <div class="mt-2 flex justify-end">
-        <button class="px-3 py-1 bg-gray-700 rounded savePump" data-json='${encodeURIComponent(JSON.stringify(s))}'>Save</button>
-      </div>
+      <div class="mt-2 flex justify-end"><button class="px-3 py-1 bg-gray-700 rounded savePump" data-json='${encodeURIComponent(JSON.stringify(s))}'>Save</button></div>
     `;
     liveList.appendChild(card);
   }
-  liveList.querySelectorAll('.savePump').forEach(b => {
-    b.addEventListener('click', e => {
-      const obj = JSON.parse(decodeURIComponent(e.currentTarget.getAttribute('data-json')));
-      addHistoryEntry(Object.assign({ id: obj.symbol+'_'+Date.now() }, obj));
-      alert('Saved to Past Signals');
-    });
-  });
+  liveList.querySelectorAll('.savePump').forEach(b => b.addEventListener('click', e=>{
+    const obj = JSON.parse(decodeURIComponent(e.currentTarget.getAttribute('data-json')));
+    addHistoryEntry(Object.assign({ id: obj.symbol+'_'+Date.now() }, obj));
+    alert('Saved to Past Signals');
+  }));
 }
 
-// ---------------- Trade Modal ----------------
+/* ---------- modal + reason breakdown ---------- */
 function openTradeModal(s){
   currentModalSignal = s;
   modalSymbol.textContent = s.symbol + ' • ' + s.direction;
   modalSub.textContent = `Prob ${s.probability}%  •  RSI ${s.rsi.toFixed(1)}  •  Vol ${Math.round(s.volume).toLocaleString()}`;
+  // reason breakdown
+  const reasons = [];
+  if(s.nearStructure) reasons.push('Near swing S/R');
+  if(s.nearVWAP) reasons.push('Near VWAP');
+  if(s.orderBlockMatch) reasons.push('Order-block match');
+  if(s.macdHist && s.macdHist > 0 && s.direction==='LONG') reasons.push('MACD bullish');
+  if(s.macdHist && s.macdHist < 0 && s.direction==='SHORT') reasons.push('MACD bearish');
+  if(s.stTrend !== null) reasons.push(`SuperTrend: ${s.stTrend ? 'Bull' : 'Bear'}`);
+  const reasonHtml = reasons.length ? reasons.map(r => `<li>${r}</li>`).join('') : '<li>Score based on indicators</li>';
   modalBody.innerHTML = `
     <div class="grid grid-cols-2 gap-2 small">
       <div class="bg-gray-800 p-2 rounded"><div class="muted small">Entry</div><div class="font-mono">${fmt(s.entry)}</div></div>
@@ -475,73 +510,48 @@ function openTradeModal(s){
       <div class="bg-green-900 p-2 rounded"><div class="muted small">TP1</div><div class="font-mono">${fmt(s.tp1)}</div></div>
       <div class="bg-green-800 p-2 rounded"><div class="muted small">TP2</div><div class="font-mono">${fmt(s.tp2)}</div></div>
     </div>
-    <div class="mt-2">
-      <label class="muted small">Risk % per trade (suggested 1%)</label>
-      <input id="riskInput" type="number" value="1" min="0.1" step="0.1" class="w-full mt-1 p-2 rounded bg-gray-800" />
-    </div>
-    <div class="mt-2 muted small">Manual trade only: copy params to Binance. Later we can enable API trade signing.</div>
+    <div class="mt-2 muted small">Reasons:</div>
+    <ul class="mt-1 ml-4 small">${reasonHtml}</ul>
+    <div class="mt-2 muted small">VWAP: ${s.vwap?fmt(s.vwap):'-'}  •  MACD hist: ${s.macdHist?s.macdHist.toFixed(4):'-'}</div>
+    <div class="mt-2 muted small">Manual trade only — copy params to Binance</div>
   `;
   tradeModal.classList.remove('hidden');
   tradeModal.style.display = 'flex';
 }
 
-closeModal.addEventListener('click', () => {
-  tradeModal.classList.add('hidden');
-  currentModalSignal = null;
+/* click outside modal to close */
+tradeModal.addEventListener('click', (e) => {
+  if(!modalContent.contains(e.target)) {
+    tradeModal.classList.add('hidden');
+    currentModalSignal = null;
+  }
 });
-
+closeModal.addEventListener('click', () => { tradeModal.classList.add('hidden'); currentModalSignal=null; });
 saveToHistory.addEventListener('click', () => {
-  if (!currentModalSignal) return;
-  const risk = Number(document.getElementById('riskInput').value || 1);
-  const rec = Object.assign({}, currentModalSignal, { savedRiskPct: risk, savedTime: nowISO() });
-  addHistoryEntry(Object.assign({ id: rec.symbol + '_' + Date.now() }, rec));
+  if(!currentModalSignal) return;
+  addHistoryEntry(Object.assign({ id: currentModalSignal.symbol + '_' + Date.now(), savedTime: nowISO() }, currentModalSignal));
   tradeModal.classList.add('hidden');
-  alert('Trade saved to history');
+  alert('Saved to Past Signals');
 });
 
-// ---------------- History rendering ----------------
+/* ---------- history UI ---------- */
 function renderHistory(){
   const h = loadHistory();
-  // build UI
   historyRoot.innerHTML = '';
-  const header = document.createElement('div');
-  header.className = 'flex items-center justify-between mb-3';
+  const header = document.createElement('div'); header.className='flex items-center justify-between mb-3';
   header.innerHTML = `<div><h3 class="text-lg font-semibold accent">Past Signals</h3><div class="muted small">Saved signals (last 48h)</div></div>
-    <div class="flex items-center space-x-2">
-      <button id="exportCsv" class="px-3 py-1 bg-gray-700 rounded small">Export CSV</button>
-      <button id="clearHist" class="px-3 py-1 bg-red-600 rounded small">Clear</button>
-    </div>`;
+    <div class="flex items-center space-x-2"><button id="exportCsv" class="px-3 py-1 bg-gray-700 rounded small">Export CSV</button><button id="clearHist" class="px-3 py-1 bg-red-600 rounded small">Clear</button></div>`;
   historyRoot.appendChild(header);
-
-  const stats = document.createElement('div');
-  const total = h.length;
-  const wins = h.filter(i=>i.result==='win').length;
-  const losses = h.filter(i=>i.result==='loss').length;
-  stats.className = 'muted small mb-2';
-  stats.textContent = `Total: ${total} • Wins: ${wins} • Losses: ${losses}`;
+  const stats = document.createElement('div'); stats.className='muted small mb-2'; stats.textContent = `Total: ${h.length}`;
   historyRoot.appendChild(stats);
-
-  const list = document.createElement('div');
-  list.className = 'space-y-2';
-  if (!h.length) {
-    list.innerHTML = `<div class="card p-3 muted">No past signals yet.</div>`;
-    historyRoot.appendChild(list);
-    attachHistoryButtons();
-    return;
-  }
-  for (const item of h) {
-    const el = document.createElement('div');
-    el.className = 'card p-3';
+  const list = document.createElement('div'); list.className='space-y-2';
+  if(!h.length){ list.innerHTML = `<div class="card p-3 muted">No past signals yet.</div>`; historyRoot.appendChild(list); attachHistoryButtons(); return; }
+  for(const item of h){
+    const el = document.createElement('div'); el.className='card p-3';
     el.innerHTML = `
       <div class="flex justify-between items-start">
-        <div>
-          <div class="font-bold">${item.symbol} • ${item.direction}</div>
-          <div class="muted small">Detected: ${new Date(item.time).toLocaleString()} • Prob ${item.probability}%</div>
-        </div>
-        <div class="text-right small">
-          <div class="muted">RSI ${item.rsi.toFixed(1)}</div>
-          <div class="muted">Vol ${Math.round(item.volume).toLocaleString()}</div>
-        </div>
+        <div><div class="font-bold">${item.symbol} • ${item.direction}</div><div class="muted small">Detected: ${new Date(item.time).toLocaleString()} • Prob ${item.probability}%</div></div>
+        <div class="text-right small"><div class="muted">RSI ${item.rsi.toFixed(1)}</div><div class="muted">Vol ${Math.round(item.volume).toLocaleString()}</div></div>
       </div>
       <div class="grid grid-cols-4 gap-2 mt-3 small">
         <div class="bg-gray-800 p-2 rounded">Entry<br/><div class="font-mono">${fmt(item.entry)}</div></div>
@@ -549,121 +559,40 @@ function renderHistory(){
         <div class="bg-green-900 p-2 rounded">TP1<br/><div class="font-mono">${fmt(item.tp1)}</div></div>
         <div class="bg-green-800 p-2 rounded">TP2<br/><div class="font-mono">${fmt(item.tp2)}</div></div>
       </div>
-      <div class="mt-2 flex items-center justify-between">
-        <div class="muted small">Saved: ${new Date(item.savedTime || item.time).toLocaleString()}</div>
-        <div class="flex items-center space-x-2">
-          <button class="markWin px-2 py-1 rounded bg-green-600 text-sm" data-id="${item.id}">Win</button>
-          <button class="markLoss px-2 py-1 rounded bg-red-600 text-sm" data-id="${item.id}">Loss</button>
-        </div>
-      </div>
     `;
     list.appendChild(el);
   }
   historyRoot.appendChild(list);
   attachHistoryButtons();
 }
-
 function attachHistoryButtons(){
-  const exportBtn = document.getElementById('exportCsv');
-  const clearBtn = document.getElementById('clearHist');
-  if (exportBtn) exportBtn.addEventListener('click', exportHistoryCSV);
-  if (clearBtn) clearBtn.addEventListener('click', () => {
-    if (!confirm('Clear history?')) return;
-    saveHistory([]);
-    renderHistory();
-  });
-  document.querySelectorAll('.markWin').forEach(b => {
-    b.addEventListener('click', e => {
-      const id = e.currentTarget.getAttribute('data-id');
-      markResult(id, 'win');
-    });
-  });
-  document.querySelectorAll('.markLoss').forEach(b => {
-    b.addEventListener('click', e => {
-      const id = e.currentTarget.getAttribute('data-id');
-      markResult(id, 'loss');
-    });
-  });
+  const exp = document.getElementById('exportCsv'); const clr = document.getElementById('clearHist');
+  if(exp) exp.addEventListener('click', exportHistoryCSV);
+  if(clr) clr.addEventListener('click', () => { if(!confirm('Clear history?')) return; saveHistory([]); renderHistory(); });
 }
-
 function exportHistoryCSV(){
-  const h = loadHistory();
-  if (!h.length) { alert('No history to export'); return; }
-  const header = ['id','time','symbol','direction','entry','sl','tp1','tp2','probability','rsi','volume','savedTime','result'];
-  const rows = h.map(r => [r.id, r.time, r.symbol, r.direction, r.entry, r.sl, r.tp1, r.tp2, r.probability, r.rsi, r.volume, (r.savedTime||''), (r.result||'')]);
-  const csv = [header, ...rows].map(a => a.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'market_history.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  const h = loadHistory(); if(!h.length){ alert('No history'); return; }
+  const header = ['id','time','symbol','direction','entry','sl','tp1','tp2','prob','rsi','volume'];
+  const rows = h.map(r => [r.id, r.time, r.symbol, r.direction, r.entry, r.sl, r.tp1, r.tp2, r.probability, r.rsi, r.volume]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='history.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-function markResult(id, result){
-  const h = loadHistory();
-  const idx = h.findIndex(i=>i.id===id);
-  if (idx === -1) return;
-  h[idx].result = result;
-  h[idx].resultTime = nowISO();
-  saveHistory(h);
-  renderHistory();
-}
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabBtn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabBtn').forEach(x => x.classList.remove('bg-yellow-600','text-black'));
+  b.classList.add('bg-yellow-600','text-black');
+  const tab = b.getAttribute('data-tab');
+  document.querySelectorAll('.tabContent').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+}));
+document.getElementById('minProbInput').addEventListener('change', () => { /* triggers re-scan */ mainScan(); });
+document.getElementById('directionFilter').addEventListener('change', mainScan);
+document.getElementById('sortBy').addEventListener('change', mainScan);
 
-// ---------------- Tabs ----------------
-document.querySelectorAll('.tabBtn').forEach(b => {
-  b.addEventListener('click', e => {
-    document.querySelectorAll('.tabBtn').forEach(x => x.classList.remove('bg-yellow-600','text-black'));
-    b.classList.add('bg-yellow-600','text-black');
-    const tab = b.getAttribute('data-tab');
-    document.querySelectorAll('.tabContent').forEach(t => t.classList.add('hidden'));
-    document.getElementById('tab-' + tab).classList.remove('hidden');
-  });
-});
-
-// ---------------- Quick live pump detection (existing pumps) ----------------
-async function scanPumps(){
-  try {
-    const tickRes = await fetch('https://fapi.binance.com/fapi/v1/ticker/24hr');
-    const tickers = await tickRes.json();
-    const pumpList = tickers.map(t => ({ symbol: t.symbol, priceChangePercent: Number(t.priceChangePercent || 0), lastPrice: Number(t.lastPrice || 0), quoteVolume: Number(t.quoteVolume || 0) }))
-      .filter(t => t.symbol.endsWith('USDT') && t.quoteVolume >= MIN_VOLUME && t.priceChangePercent >= 5)
-      .sort((a,b) => b.priceChangePercent - a.priceChangePercent)
-      .slice(0, 10);
-
-    // for each pump compute quick SL/TP using 1h ATR to size stops
-    const quickResults = [];
-    for (const p of pumpList) {
-      const k = await fetchKlines(p.symbol, '1h', 48);
-      if (!k) continue;
-      const atrObj = computeATR(k) || { atr_pct: 0.02 };
-      const entry = p.lastPrice;
-      const sl = entry * (1 + Math.max(0.01, Math.min(0.06, atrObj.atr_pct * 3)));
-      const tp1 = entry * (1 - Math.max(0.005, atrObj.atr_pct));
-      const tp2 = entry * (1 - Math.max(0.01, atrObj.atr_pct * 2));
-      quickResults.push({ symbol: p.symbol, entry, sl, tp1, tp2, confidence: Math.round(Math.min(100, p.priceChangePercent*2)), rsi: 50, pumpPercent: p.priceChangePercent, volume: p.quoteVolume });
-    }
-    renderLive(quickResults);
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-// ---------------- Main loop ----------------
-async function mainScan(){
-  await scanPumps();
-  await scanMarkets();
-  renderHistory();
-}
-
+/* ---------- main loop ---------- */
+async function mainScan(){ renderHistory(); await scanMarkets(); }
 refreshBtn.addEventListener('click', mainScan);
-document.getElementById('directionFilter').addEventListener('change', () => {
-  mainScan();
-});
-document.getElementById('sortBy').addEventListener('change', () => {
-  mainScan();
-});
-
-// initial load
-renderHistory();
 mainScan();
 setInterval(mainScan, REFRESH_MS);
 </script>
